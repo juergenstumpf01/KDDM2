@@ -1,14 +1,14 @@
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-
-# Load the prediction file (replace 'prediction.npy' with your actual prediction file's name)
-predictions = np.load("prediction.npy")
+from sklearn.model_selection import train_test_split
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Load the 'repeat last state' baseline file
 repeat_last_state = np.load("25_DeepBlue.npy")
 
+# Update with final prediction file
 # Load your prediction data to find the shape
-predictions = np.load("prediction.npy")  # replace with your actual file if different
+predictions = np.load("prediction.npy")  
 
 # Get the shape of your predictions
 shape_of_predictions = predictions.shape
@@ -47,3 +47,18 @@ average_mse = total_mse / num_slices
 
 print("Always Predict Zero Baseline:")
 print(f"Average MSE: {average_mse}")
+print(" ")
+
+
+# Split the data into training and testing sets with 80/20 split
+train_data, test_data = train_test_split(predictions, test_size=0.2, random_state=42)
+
+train_data_reshaped = train_data.reshape(train_data.shape[0], -1)
+test_data_reshaped = test_data.reshape(test_data.shape[0], -1)
+
+
+# Calculate the cosine similarity
+cos_sim = cosine_similarity(train_data_reshaped, test_data_reshaped)
+
+print("Cosine Similarity:")
+print(cos_sim)
