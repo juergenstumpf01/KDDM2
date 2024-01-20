@@ -10,9 +10,15 @@ repeat_last_state = np.load("25_DeepBlue.npy")
 # Load your prediction data to find the shape
 predictions = np.load("prediction.npy")  
 
+# Get the shape of your predictions
+shape_of_predictions = predictions.shape
+
+# Create an array of zeros with the same shape
+zeros_array = np.zeros(shape_of_predictions)
+
 # Save this array to a .npy file
 # np.save("zeros_prediction.npy", zeros_array)
-zeros_prediction = np.load("dummy_test_dataset.npy")
+zeros_prediction = np.load("zeros_prediction.npy")
 
 # Initialize variables to accumulate theMSE and MAE
 total_mse = 0
