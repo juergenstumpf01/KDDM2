@@ -13,6 +13,8 @@ import chess
 import chess.svg
 from IPython.display import display, SVG, clear_output
 import numpy as np
+from scipy.stats import pearsonr
+from scipy.spatial.distance import euclidean
 
 
 split_index = 7020
@@ -125,13 +127,29 @@ pred_repeat_last_move = np.zeros((8,8,12220-split_index))
 for i in range(12220-split_index):   
     pred_repeat_last_move[:,:,i] = data[:,:,split_index]
 
-pred_always_zero_reshaped = pred_always_zero.reshape(-1, 8*8)
-test_data_reshaped = test_data.reshape(-1, 8*8)
 
-cos_sim = cosine_similarity(pred_always_zero_reshaped, test_data_reshaped)
 
-average_cos_sim = np.mean(cos_sim)
-print(f"Average Cosine Similarity: {average_cos_sim}")
+def get_cosine_sim(train, test):
+    cosim = 0
+    mean_cosim = 0
+    for i in range(8):
+        for j in range(8):
+            cosim = euclidean(train[i,j], test[i,j])
+            
+            mean_cosim += np.mean(cosim)
+
+    return mean_cosim / 64
+
+
+
+
+print(f"pred_always_zero_reshaped: {get_cosine_sim(pred_always_zero, test_data)}")
+
+print(f"pred_pred_repeat_last_move: {get_cosine_sim(pred_repeat_last_move, test_data)}")
+
+print(f"pred_pred_moves_without_trend: {get_cosine_sim(pred_moves_without_trend, test_data)}")
+
+print(f"pred_pred_moves_with_trend: {get_cosine_sim(pred_moves_with_trend, test_data)}")
 
 
 #plot_time_series([1,1], pred_moves_with_trend)
