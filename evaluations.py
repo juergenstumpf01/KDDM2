@@ -50,7 +50,7 @@ for row in range(8):
 result = res
 
 
-def get_linear_funciton(data, spatial_index):
+def get_linear_funciton(data, spatial_index, plot=False):
 
     selected_data = data[spatial_index[0], spatial_index[1]]
 
@@ -65,6 +65,17 @@ def get_linear_funciton(data, spatial_index):
     x_linear_function = np.linspace(0, len(y_values) - 1, num=1000)
     y_linear_function = linear_function(x_linear_function)
     
+
+    if plot:
+        plt.figure(figsize=(12, 8)) 
+        plt.plot(range(1, len(selected_data) + 1), selected_data, label=f'Spatial Index {spatial_index}', linewidth=0.2)
+        plt.plot(x_linear_function, y_linear_function, color='red', label=f'Linear Function: y = {slope:.6f}x + {intercept:.2f}')
+
+        plt.xlabel('Sample Index')
+        plt.ylabel('Value')
+        plt.title(f'Time Series for Spatial Index {spatial_index}')
+        plt.legend()
+        plt.show()
     return slope, intercept
 
 clean_moves = result.copy()
@@ -72,7 +83,7 @@ clean_data = train_data.copy()
 cleaned_data = np.empty((8, 8), dtype=object)
 
 # substract moves to get linear data
-for i in range(2):
+for i in range(27):
     for j in range(260):
         clean_data[:,:,260*i+j] -= clean_moves[:,:,i]
 
@@ -89,12 +100,19 @@ for i in range(clean_data.shape[0]):
         tmp = tmp[~nan_indices] 
         cleaned_data[i,j] = tmp
 
-get_linear_funciton(cleaned_data,(1,1))
+
+
+get_linear_funciton(cleaned_data,(1,1), True)
 
 linear_functions = np.zeros((8,8,2))
 
 ##_______________________________________
-improvedpred = result[:,:,27:47].copy()
+
+improvedpred = np.zeros((8,8,5200))
+for i in range(8):
+    for j in range(8):
+        improvedpred[i,j] = np.repeat(result[i,j,27:],260)
+print(improvedpred.shape)
 
 for i in range(cleaned_data.shape[0]):
     for j in range(cleaned_data.shape[1]):
@@ -105,20 +123,19 @@ for i in range(cleaned_data.shape[0]):
 for i in range(improvedpred.shape[0]):
     for j in range(improvedpred.shape[1]):
         for x in range(improvedpred.shape[2]):
-            improvedpred[i,j,x] = improvedpred[i,j,x] + linear_functions[i,j,0]*((260*x)+(12220-split_index)) - linear_functions[i,j,1]
+            improvedpred[i,j,x] = improvedpred[i,j,x] + linear_functions[i,j,0]*(x+7020) + linear_functions[i,j,1]
 
-
-pred_moves_with_trend = np.zeros((8,8,12220-split_index))
-for i in range(20):
-    for j in range(260): 
-        pred_moves_with_trend[:,:,i+j] = improvedpred[:,:,i]
-
+print(improvedpred.shape)
+pred_moves_with_trend = improvedpred
 
 
 pred_moves_without_trend = np.zeros((8,8,12220-split_index))
-for i in range(20):
-    for j in range(260): 
-        pred_moves_without_trend[:,:,i+j] = result[:,:,27+i]
+for i in range(8):
+    for j in range(8):
+        pred_moves_without_trend[i,j] =  np.repeat(result[i,j,27:],260)
+
+
+
 
 
 
@@ -130,16 +147,18 @@ for i in range(12220-split_index):
 
 
 def get_cosine_sim(train, test):
-    cosim = 0
     mean_cosim = 0
     for i in range(8):
         for j in range(8):
-            cosim = euclidean(train[i,j], test[i,j])
-            
-            mean_cosim += np.mean(cosim)
+            dist = cosine_similarity(train[i,j].T, test[i,j].T)[0,0]
+            mean_cosim += np.mean(dist)
 
     return mean_cosim / 64
 
+#plot_time_series([1,1], pred_always_zero)
+#plot_time_series([1,1], pred_repeat_last_move)
+#plot_time_series([1,1], pred_moves_without_trend)
+#plot_time_series([1,1], pred_moves_with_trend)
 
 
 
@@ -151,8 +170,6 @@ print(f"pred_pred_moves_without_trend: {get_cosine_sim(pred_moves_without_trend,
 
 print(f"pred_pred_moves_with_trend: {get_cosine_sim(pred_moves_with_trend, test_data)}")
 
-
-#plot_time_series([1,1], pred_moves_with_trend)
 
 
 #def dhfalsjhd():
